@@ -21,3 +21,19 @@
 *.i*86
 *.x86_64
 *.hex
+
+#Python
+*.py[co]
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+develop-eggs
+.installed.cfg
+scratch
+env
