@@ -62,6 +62,12 @@ int get_bit(int* bit_array, int position)
 }
 
 
+void free_bit_array(int* bit_array)
+{
+  free(bit_array);
+}
+
+
 // char* bit_array_to_char(int* bit_array, int size)
 // {
 //   int num_lines = size / LINE_SIZE;
@@ -114,17 +120,17 @@ int get_bit(int* bit_array, int position)
 #define ARRAY_SIZE 42
 int main()
 {
-  int* bit_array = calloc_bit_array(ARRAY_SIZE);
-  print_bit_array(bit_array, ARRAY_SIZE);
-
-  set_bit(bit_array, 12);
-  print_bit_array(bit_array, ARRAY_SIZE);
-
-  set_bit(bit_array, 12);
-  print_bit_array(bit_array, ARRAY_SIZE);
-
-  clear_bit(bit_array, 12);
-  print_bit_array(bit_array, ARRAY_SIZE);
+//   int* bit_array = calloc_bit_array(ARRAY_SIZE);
+//   print_bit_array(bit_array, ARRAY_SIZE);
+// 
+//   set_bit(bit_array, 12);
+//   print_bit_array(bit_array, ARRAY_SIZE);
+// 
+//   set_bit(bit_array, 12);
+//   print_bit_array(bit_array, ARRAY_SIZE);
+// 
+//   clear_bit(bit_array, 12);
+//   print_bit_array(bit_array, ARRAY_SIZE);
   return 0;
 
 }
