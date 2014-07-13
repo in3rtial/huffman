@@ -18,200 +18,193 @@
 */
 
 #include <cassert>
-#include <iostream>
 #include <vector>
-#include <stdlib.h>
-#include <string>
-
-using namespace std;
+#include <cstdlib>
 
 
-class BitArray
-{
+using std::vector;
+
+
+class BitArray {
     public:
-
-        BitArray(int length)
-        {
-            //allocates bit array through int array
+        BitArray(int length) {
+            /*
+             * BitArray is a contiguous array of int allowing
+             * bit manipulation through bitwise operations
+             */
             assert(length > 0);
             int array_length = (length / (sizeof(int) * 8));
-            if( (length % (sizeof(int) * 8)) != 0 )
-            {
-                array_length ++;
+            if ( (length % (sizeof(int) * 8)) != 0 ) {
+                array_length++;
             }
-            cout << "allocated " << array_length << " bytes"<< endl;
             size = length;
-            bits = (int*) calloc(array_length, sizeof(int));
+            bits = reinterpret_cast<int*>(calloc(array_length, sizeof(int)));
         }
 
-        ~BitArray()
-        {
+        ~BitArray() {
             free(bits);
-//             free(size);
         }
 
-        void set_bit(int position)
-        {
+        void set_bit(int position) {
             /* bit gets value of 1 at given position
              * the bit array is initially all zeros (calloc)
              */
             assert(0 <= position < size);
-            bits[position/(sizeof(int)*8)] |= 1 << (position % (sizeof(int)*8));
+            bits[position/(sizeof(int)*8)] |=
+                1 << (position % (sizeof(int)*8));
         }
 
 
-        void clear_bit(int position)
-        {
+        void clear_bit(int position) {
             /* bit gets value of 0 at given position
              * the bit array is initially all zeros (calloc)
              */
             assert(0 <= position < size);
-            bits[position/(sizeof(int)*8)] &= ~(1 << (position %(sizeof(int)*8)));
+            bits[position/(sizeof(int)*8)] &=
+                ~(1 << (position %(sizeof(int)*8)));
         }
 
 
-        int get_bit(int position)
-        {
+        int get_bit(int position) {
             assert(0 <= position < size);
-            return ( ((bits)[position/(sizeof(int)*8)] & (1 << (position % (sizeof(int)*8))))  != 0);
+            return ( ((bits)[position/(sizeof(int)*8)] &
+                (1 << (position % (sizeof(int)*8))))  != 0);
         }
 
-
-//     private:
+    private:
         int size;
         int* bits;
 };
 
 
-class BinaryNode
-{
+class Node {
+    /*
+     * Node object is used by the Trie structure
+     */
+
     public:
-        BinaryNode()
-        {
-            char symbol = ' ';
-            BinaryNode* children[] = {NULL, NULL};
-        }
-
-        ~BinaryNode() {}
-
-        BinaryNode* get_child(char index)
-        {
-            BinaryNode* child;
-            index == '0' ? child = children[0] : child = children[1];
-            return child;
-        }
-
-        void new_child(char index)
-        {
-            index == '0' ? children[0] = new BinaryNode() : children[1] = new BinaryNode();
-        }
-
-        void set_symbol(char sym)
-        {
-            symbol = sym;
-        }
-
-        char get_symbol()
-        {
-            return symbol;
-        }
-
-    private:
+        char code;
         char symbol;
-        BinaryNode* children[];
+        vector<Node*> children;
+
+        Node(char c, char sym=' ') {
+            code = c;
+            symbol = sym;
+            children = vector<Node*>();
+        }
+
+        ~Node() { }
+
+
+        Node* find_child(char c) {
+            for ( int i = 0; i < children.size(); i++ ) {
+                if (children[i]->code == c) {
+                    return children[i];
+                }
+            }
+            return NULL;
+        }
 };
 
 
-class BinaryTrie
-{   /*trie data structure*/
+class Trie {
+    /*
+     * Trie is a customized trie, only usable for Huffman coding
+     * because of the property of the code (no code is prefix of another)
+     */
+
+    private:
+        Node* root;
+
     public:
-        BinaryTrie():
-            root(new BinaryNode()) { }
-
-        ~BinaryTrie(){ }
-
-        void add_code(const char* binary_code, char sym)
-        {
-            BinaryNode* position = root;
-            for (const char* c = binary_code; *c != '\0'; c++)
-            {
-                if(position->get_child(*c) == NULL)
-                {
-                    position->new_child(*c);
-                }
-                position = position->get_child(*c);
-            }
-            position->set_symbol(sym);
+        Trie() {
+            root = new Node(' ');
         }
 
+        ~Trie() { }
 
-        string decode(char* message)
-        {
-            BinaryNode* position = root;
+        void add_code(const char* code, const char symbol) {
+            Node* position = root;
+            for (const char* c = code; *c != '\0'; c++) {
+                Node* child = position->find_child(*c);
+                if ( child != NULL ) {
+                    position = child;
+                } else {
+                    Node* tmp = new Node((*c));
+                    position->children.push_back(tmp);
+                    position = tmp;
+                }
+            }
+            position->symbol = symbol;
+        }
+
+        char* decode(const char* message) {
+            Node* position = root;
             vector<char> decoded_message = vector<char>();
-            for(const char* c = message; *c != '\0'; c++)
-            {
-                if(position->get_child(*c) == NULL)
-                {
-                    decoded_message.push_back(position->get_symbol());
+            for ( const char* c = message; *c != '\0'; c++ ) {
+                if (position->find_child(*c) == NULL) {
+                    decoded_message.push_back(position->symbol);
                     position = root;
                     c--;
-                }
-                else
-                {
-                    position = position->get_child(*c);
+                } else {
+                    position = position->find_child(*c);
                 }
             }
-            decoded_message.push_back(position->get_symbol());
-            string result (decoded_message.begin(), decoded_message.end());
-            return result;
+            decoded_message.push_back(position->symbol);
+            char* result_string = reinterpret_cast<char*>
+                (malloc(decoded_message.size() * sizeof(char)));
+            for ( int i = 0; i < decoded_message.size(); i++ ) {
+                result_string[i] = decoded_message[i];
+            }
+            return result_string;
         }
-
-    private:
-        BinaryNode* root;
 };
 
 
-extern "C"
-{
+
+
+extern "C" {
     /*
      * BIT ARRAY STRUCTURE
      * contiguous array of int
      */
-    BitArray* BitArray_new(int size){ return new BitArray(size); }
-    BitArray* BitArray_free(BitArray* array){ array->~BitArray();}
-    void BitArray_clear_bit(BitArray* array, int position){ array->clear_bit(position); }
-    void BitArray_set_bit(BitArray* array, int position){ array->set_bit(position); }
-    int  BitArray_get_bit(BitArray* array, int position){ array->get_bit(position); }
+    BitArray* BitArray_new(int size) {
+        return new BitArray(size);}
+    BitArray* BitArray_free(BitArray* array) {
+        array->~BitArray();}
+    void BitArray_clear_bit(BitArray* array, int position) {
+        array->clear_bit(position);}
+    void BitArray_set_bit(BitArray* array, int position) {
+        array->set_bit(position);}
+    int  BitArray_get_bit(BitArray* array, int position) {
+        array->get_bit(position);}
 
     /*
-     * BINARY TRIE STRUCTURE
+     * TRIE STRUCTURE
      * each node of the trie has a maximum of 2 child
      */
-    BinaryTrie* BinaryTrie_new(){ return new BinaryTrie(); }
-    void BinaryTrie_add_code(BinaryTrie* trie, const char* binary_code, char sym){ trie->add_code(binary_code, sym);}
-    void BinaryTrie_decode(BinaryTrie* trie, char* message){ trie->decode(message); }
+    Trie* Trie_new() { return new Trie(); }
+    void Trie_add_code(Trie* trie, const char* binary_code, const char sym) {
+        trie->add_code(binary_code, sym);
+    }
+    void Trie_decode(Trie* trie, const char* message) { trie->decode(message);}
 
 }
 
 
-int main()
-{
+int main() {
     // Test program
-    
-    BinaryTrie* trie = new BinaryTrie();
-    trie->add_code("11", 'a');
-    trie->add_code("00", 'b');
-    BinaryTrie_add_code(trie, "1001", 'c');
-    trie->add_code("011", 'd');
-    cout << "-----------------" << endl;
-    cout << trie->decode("11") << endl;
-    cout << trie->decode("00") << endl;
-    cout << trie->decode("1001") << endl;
-    cout << "-----------------" << endl;
-    cout << trie->decode("1100") <<endl;
-    cout << trie->decode("11001001011")<<endl;
-    
-    
-//     delete(bit);
+//     Trie* trie = Trie_new();
+//     Trie_add_code(trie, "11", 'a');
+//     Trie_add_code(trie, "00", 'b');
+//     Trie_add_code(trie, "1001", 'c');
+//     Trie_add_code(trie, "011", 'd');
+//     Trie_add_code(trie, "101", 'e');
+//     cout << "-----------------" << endl;
+//     cout << trie->decode("11") << endl;
+//     cout << trie->decode("00") << endl;
+//     cout << trie->decode("1001") << endl;
+//     cout << "-----------------" << endl;
+//     cout << trie->decode("1100") <<endl;
+//     cout << trie->decode("10011001100111001001011")<<endl;
 }
