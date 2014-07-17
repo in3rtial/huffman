@@ -29,7 +29,7 @@ class Node {
         char symbol;
         vector<Node*> children;
 
-        Node(char c, char sym=' ') {
+        Node(char c, char sym='\0') {
             code = c;
             symbol = sym;
             children = vector<Node*>();
@@ -37,6 +37,12 @@ class Node {
 
         ~Node() { }
 
+        void del() {
+            for(int i = 0; i < children.size(); i++) {
+                children[i]->del();
+            }
+            delete(this);
+        }
 
         Node* find_child(char c) {
             for ( int i = 0; i < children.size(); i++ ) {
@@ -60,10 +66,12 @@ class HuffmanTrie {
 
     public:
         HuffmanTrie() {
-            root = new Node(' ');
+            root = new Node('\0');
         }
 
-        ~HuffmanTrie() { }
+        ~HuffmanTrie() {
+            root->del();
+        }
 
         void add_code(const char* code, const char symbol) {
             Node* position = root;
@@ -85,6 +93,10 @@ class HuffmanTrie {
             vector<char> decoded_message = vector<char>();
             for ( const char* c = message; *c != '\0'; c++ ) {
                 if (position->find_child(*c) == NULL) {
+                    if(position->symbol == '\0') {
+                        char* result = "ERROR IN DECODING";
+                        return result;
+                    }
                     decoded_message.push_back(position->symbol);
                     position = root;
                     c--;
@@ -92,6 +104,10 @@ class HuffmanTrie {
                     position = position->find_child(*c);
                 }
             }
+            if(position->symbol == '\0') {
+                        char* result = "ERROR IN DECODING";
+                        return result;
+                    }
             decoded_message.push_back(position->symbol);
             char* result_string = reinterpret_cast<char*>
                 (malloc((decoded_message.size()+1) * sizeof(char)));
@@ -103,18 +119,25 @@ class HuffmanTrie {
         }
 };
 
+
 int main()
 {
     HuffmanTrie* a = new HuffmanTrie();
     a->add_code("00", 'a');
     a->add_code("11", 'b');
     a->add_code("1001", 'c');
-    std::cout << a->decode("00111001") << std::endl;
+    char* b = a->decode("00111001");
+    std::cout << b << std::endl;
+    delete(a);
+    free(b);
 }
+
 
 extern "C" {
 
     HuffmanTrie* _new() { return new HuffmanTrie(); }
+
+    HuffmanTrie* _delete(HuffmanTrie* trie) { delete(trie); }
 
     void _add_code(HuffmanTrie* trie, const char* binary_code, const char sym) {
         trie->add_code(binary_code, sym); }

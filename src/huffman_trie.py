@@ -19,4 +19,8 @@ class HuffmanTrie(object):
     def decode(self, message):
         return(huffman_trie._decode(self.obj, str.encode(message)))
 
+    def __del__(self):
+        huffman_trie._delete(self.obj)
+        print("collected")
+
 __all__ = ["HuffmanTrie"]
