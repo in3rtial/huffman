@@ -21,6 +21,5 @@ class HuffmanTrie(object):
 
     def __del__(self):
         huffman_trie._delete(self.obj)
-        print("collected")
 
 __all__ = ["HuffmanTrie"]
