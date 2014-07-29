@@ -68,17 +68,5 @@ class HuffmanCode(object):
 
         return decode_trie.decode(bit_array.get_bits())
 
-from random import randrange
-def test(n, wordsize = 100):
-    errors = []
-    for _ in range(n):
-        word = "".join([chr(randrange(1, 124)) for _ in range(wordsize)])
-        a = HuffmanCode(word)
-        returned_word = a.decode(a.encode(word))
-        if str.encode(word) != returned_word:
-            print("{0} \n != \n {1} \n".format(repr(word), repr(returned_word)))
-            errors.append(word)
-    return errors
-
 
 __all__ = ["HuffmanCode"]
