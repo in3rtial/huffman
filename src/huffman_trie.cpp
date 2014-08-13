@@ -35,14 +35,11 @@ class Node {
             children = vector<Node*>();
         }
 
-        ~Node() { }
+        ~Node() {
+			for(int i = 0; i < children.size(); i++) {
+				delete(children[i]);
+            } }
 
-        void del() {
-            for(int i = 0; i < children.size(); i++) {
-                children[i]->del();
-            }
-            delete(this);
-        }
 
         Node* find_child(char c) {
             for ( int i = 0; i < children.size(); i++ ) {
@@ -70,7 +67,7 @@ class HuffmanTrie {
         }
 
         ~HuffmanTrie() {
-            root->del();
+            delete(root);
         }
 
         void add_code(const char* code, const char symbol) {
